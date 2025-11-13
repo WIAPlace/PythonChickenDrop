@@ -1,0 +1,140 @@
+import sys
+import pygame
+import random
+
+# initialize the game
+pygame.init()
+
+# create screen
+width = 800
+height = 600
+size = (width,height)
+baseSpeed = .1
+
+# define black for painting the screen
+black = (0,0,0)
+
+#set the size
+screen = pygame.display.set_mode(size)
+# set title of screen
+pygame.display.set_caption("Chicken Click")
+
+#create image we'll use
+chicken = pygame.image.load("X.png")
+commet = pygame.image.load("Commet.png")
+
+#crate start x and y
+iterator = 0
+numOfChickens = 5
+
+commitStartX = random.randint(0,width-commet.get_width()+1)
+commitStartY = 0 - random.randint(commet.get_height(),commet.get_height()*2)
+commitSpeed =  baseSpeed *2
+
+startX = []
+startY = []
+speed = []
+while iterator < numOfChickens:
+    startX.append(random.randint(0,width-chicken.get_width()+1))
+    startY.append(0 - random.randint(chicken.get_height(),chicken.get_height()*2))
+    speed.append(baseSpeed)#random.random()+float(random.randint(0,3))+0.1)
+    iterator += 1
+
+replayScreen = False
+#setting up play again
+bigFont = pygame.font.SysFont(None,200)
+playAgainText = bigFont.render("Play Again?",True,(0,200,0))
+paX = width/2 - playAgainText.get_rect().width/2
+
+#setting y/n txt
+smallFont = pygame.font.SysFont(None,100)
+yesText = smallFont.render("YES",True,(0,200,0))
+yesX = width/4-yesText.get_rect().width/2
+noText = smallFont.render("NO",True,(0,200,0))
+noX=width - width/4 - yesText.get_rect().width/2
+
+### Game Loop
+
+gameOver = False
+
+while gameOver == False:
+    
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            gameOver = True
+    #---------------------------------------------------Check clicks
+    if pygame.mouse.get_pressed()[0]:
+        coords = pygame.mouse.get_pos()
+        if replayScreen == False:
+            iterator = 0
+            while iterator<numOfChickens:
+                if coords[0]>=startX[iterator] and coords[0]<=startX[iterator]+chicken.get_width() and coords[1] >= startY[iterator] and coords[1] <= startY[iterator]+ chicken.get_height():
+                    startX[iterator] = random.randint(0,width - chicken.get_width()+1)
+                    startY[iterator] = 0 - random.randint(chicken.get_height(),chicken.get_height()*2)
+                    speed[iterator] += baseSpeed  #random.random() + float(random.randint(0,3))+.1
+                    break
+                iterator+=1
+            if coords[0]>=commitStartX and coords[0]<=commitStartX+commet.get_width() and coords[1] >= commitStartY and coords[1] <= commitStartY+ commet.get_height():
+                commitStartX =random.randint(0,width - commet.get_width()+1)
+                commitStartY = 0 - random.randint(commet.get_height(),commet.get_height()*2)
+                commitSpeed += baseSpeed *2
+                newIterator = 0
+                while newIterator<numOfChickens:
+                    speed[newIterator] -= baseSpeed
+                    newIterator += 1
+        else:
+            #check yes
+            iterator = 0
+            while iterator<numOfChickens:
+                speed[iterator] = baseSpeed
+                iterator +=1
+            commitSpeed = baseSpeed *2
+            if coords[0]>yesX and coords[0]<yesX +yesText.get_rect().width and coords[1]>450 and coords[1] <450 + yesText.get_rect().height:
+                iterator = 0
+                while iterator<numOfChickens:
+                    startX[iterator] = random.randint(0,width - chicken.get_width()+1)
+                    startY[iterator] = 0 - random.randint(chicken.get_height(),chicken.get_height()*2)
+                    speed[iterator] += baseSpeed #random.random() + float(random.randint(0,3))+.1
+                    iterator+=1
+                replayScreen = False
+            #check No
+            if coords[0] > noX and coords[0] < noX + noText.get_rect().width and coords[1] >450 and coords[1] < 450 + noText.get_rect().height:
+                gameOver=True
+
+    
+    #---------------------------------------------------Update
+    if replayScreen == False:
+        iterator = 0
+        while iterator < numOfChickens:
+            if startY[iterator] +chicken.get_height()>height:
+                replayScreen = True
+                break
+            startY[iterator]+=speed[iterator]
+            iterator +=1
+        commitStartY += commitSpeed;
+    if commitStartY +commet.get_height()>height:
+        commitStartX =random.randint(0,width - commet.get_width()+1)
+        commitStartY = 0 - random.randint(commet.get_height(),commet.get_height()*2)
+
+
+    #----------------------------------------------------Drawing
+    if replayScreen == False:
+        screen.fill(black)
+        iterator = 0
+        while iterator < numOfChickens:
+            screen.blit(chicken, (startX[iterator],startY[iterator]))
+            iterator += 1
+        iterator = 0
+        screen.blit(commet, (commitStartX,commitStartY))
+    else:
+        screen.fill((200,0,0))
+        screen.blit(playAgainText,(paX,150))
+        screen.blit(yesText,(yesX,450))
+        screen.blit(noText,(noX,450))
+
+    # Flips the screen
+    pygame.display.flip()
+#when game loop is over quit.
+pygame.display.quit()
+
+
